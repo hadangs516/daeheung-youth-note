@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>중고등부 설교 질문지 다운로드</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .active-view {
+            display: block;
+            animation: fadeIn 0.25s ease-in-out;
+        }
+        .hidden-view {
+            display: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 검색창 애니메이션용 클래스 */
+        .search-open {
+            max-height: 60px;
+            opacity: 1;
+            margin-top: 8px;
+            margin-bottom: 12px;
+        }
+        .search-closed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center p-4 md:p-6 relative min-h-screen">
+
+    <header class="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 mb-4 flex items-center justify-between">
+        <button id="navBtn" onclick="toggleView()" class="flex items-center gap-2 text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-xl transition-all">
+            <i id="navIcon" class="fa-solid fa-clock-rotate-left"></i>
+            <span id="navText">지난 질문지</span>
+        </button>
+
+        <div class="text-right">
+            <h1 class="text-xs font-medium text-slate-400">포항대흥교회 중고등부</h1>
+            <p class="text-base font-bold text-slate-800">설교 질문지 다운</p>
+        </div>
+    </header>
+
+    <main class="w-full max-w-md mb-8">
+
+        <div id="loadingView" class="text-center py-10 text-slate-500 text-sm font-semibold">
+            <i class="fa-solid fa-spinner fa-spin text-indigo-500 text-2xl mb-2"></i><br>
+            질문지를 불러오는 중입니다...
+        </div>
+
+        <section id="downloadView" class="hidden-view space-y-4">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span id="badge" class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <i class="fa-solid fa-circle text-[8px]"></i> 이번 주 질문지
+                    </span>
+                    <span id="worksheetDate" class="text-xs font-semibold text-slate-400">-</span>
+                </div>
+
+                <div id="sundayWarning" class="hidden bg-red-50 border border-red-200 rounded-xl p-3.5">
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-red-500 mt-0.5"></i>
+                        <p class="text-sm font-semibold text-red-700 leading-relaxed break-keep">이번 주 질문지 날짜가 주일이 아닌 것 같습니다. 확인되시면 박윤상 목사님께 말씀해 주세요.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 id="sermonTitle" class="text-xl font-extrabold text-slate-800 leading-snug">-</h2>
+                    <div class="mt-2 space-y-1">
+                        <p id="sermonPassage" class="text-sm font-medium text-indigo-600">
+                            <i class="fa-solid fa-book-bible w-4 text-center mr-1"></i> -
+                        </p>
+                        <p id="sermonPreacher" class="text-sm font-medium text-slate-500">
+                            <i class="fa-solid fa-user-pen w-4 text-center mr-1"></i> -
+                        </p>
+                    </div>
+                </div>
+
+                <div id="noticeBox" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3.5">
+                    <div class="flex items-start gap-2">
+                        <span class="text-base leading-none mt-0.5">📢</span>
+                        <p id="noticeText" class="text-sm font-semibold text-amber-800 leading-relaxed break-keep"></p>
+                    </div>
+                </div>
+
+                <p class="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed">
+                    💡 포항대흥교회 교인을 위한 공예배 설교 질문지입니다. <br> 중고등부 학생들은 종이 주보도 꼭 챙겨주시길 바랍니다.
+                </p>
+
+                <hr class="border-slate-100">
+
+                <div class="space-y-3 pt-1">
+                    <a id="pdfBtn" href="#" class="w-full bg-red-500 hover:bg-red-600 active:scale-[0.99] text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-between shadow-sm shadow-red-200 transition-all">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-file-pdf text-xl"></i>
+                            <div class="text-left">
+                                <div class="text-sm">PDF 다운로드</div>
+                                <div class="text-[10px] text-red-100 font-normal">패드 사용자에게 추천</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-download text-sm opacity-80"></i>
+                    </a>
+
+                    <a id="imgBtn" href="#" class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-between shadow-sm shadow-indigo-200 transition-all">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-file-image text-xl"></i>
+                            <div class="text-left">
+                                <div class="text-sm">이미지 다운로드</div>
+                                <div class="text-[10px] text-indigo-100 font-normal">스마트폰 사용자에게 추천</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-download text-sm opacity-80"></i>
+                    </a>
+                </div>
+
+                <!-- 📱 앱 설치/홈 화면 추가 안내 버튼 카드 -->
+                <div onclick="openInstallGuide()" class="bg-indigo-50/80 hover:bg-indigo-100/80 border border-indigo-100 rounded-xl p-3.5 flex items-center justify-between cursor-pointer transition-all active:scale-[0.99] mt-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-mobile-screen-button text-base"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-800">바탕화면에 앱으로 추가하기</div>
+                            <div class="text-[10px] text-indigo-600 font-medium">매주 링크 검색 없이 한 번에 접속!</div>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-xs text-indigo-400"></i>
+                </div>
+            </div>
+
+            <div class="text-center text-xs text-slate-400 py-2">
+                파일 다운로드에 어려움이 있다면 박윤상 목사님에게 문의해주세요.
+            </div>
+        </section>
+
+        <section id="archiveView" class="hidden-view">
+            <div class="flex items-center justify-between px-1 mb-2">
+                <h3 class="text-sm font-bold text-slate-700">📁 지난 설교 질문지 리스트</h3>
+                <button onclick="toggleSearchBar()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-200/50 text-slate-500 hover:bg-slate-200 hover:text-indigo-600 transition-all active:scale-90">
+                    <i id="searchToggleIcon" class="fa-solid fa-magnifying-glass text-sm"></i>
+                </button>
+            </div>
+
+            <div id="searchContainer" class="search-closed overflow-hidden transition-all duration-300 ease-in-out">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="searchInput" onkeyup="filterArchive()" placeholder="날짜, 설교자, 본문, 제목 검색..." class="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-indigo-500 transition-all shadow-sm">
+                    <button onclick="clearSearch()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors">
+                        <i class="fa-solid fa-circle-xmark text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="archiveList" class="space-y-2">
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 알림 팝업 -->
+    <div id="customAlert" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-2xl p-6 m-4 max-w-[300px] w-full shadow-2xl transform scale-95 transition-transform duration-300" id="customAlertBox">
+            <div class="text-center">
+                <div class="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-3 text-xl">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-800 mb-2">파일이 없습니다</h3>
+                <p class="text-xs text-slate-500 leading-relaxed mb-5" id="alertMessage">메시지</p>
+                <button onclick="closeAlert()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-3 px-4 rounded-xl transition-colors text-sm">
+                    확인
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📱 바탕화면 앱 추가 안내 팝업 -->
+    <div id="installGuideModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 opacity-0 p-4">
+        <div class="bg-white rounded-2xl p-5 max-w-sm w-full shadow-2xl transform scale-95 transition-transform duration-300 space-y-4 max-h-[90vh] overflow-y-auto" id="installGuideBox">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-mobile-screen text-indigo-600"></i> 홈 화면에 앱 추가하기
+                </h3>
+                <button onclick="closeInstallGuide()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- 접속 환경에 맞는 안내가 JS로 채워집니다 -->
+            <div id="installGuideBody" class="space-y-3 text-xs text-slate-600">
+                <div class="text-center text-slate-400 py-4">안내를 준비하는 중입니다...</div>
+            </div>
+
+            <button onclick="closeInstallGuide()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-3 px-4 rounded-xl transition-colors text-sm">
+                확인했습니다
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const SPREADSHEET_ID = '1RjKI8FeeYuK0DoW8w3ZezexSZdFUkVmhoZiVVmPEbeY';
+
+        /* 대한성서공회 성경플랫폼 개역개정(NKRV) 주소.
+           형식: .../bible/NKRV/책코드.장  (예: JHN.3 = 요한복음 3장) */
+        const BIBLE_BASE_URL = 'https://bible.bskorea.or.kr/bible/NKRV/';
+
+        /* 책 이름을 못 알아볼 때 쓰는 대체 링크 */
+        const BIBLE_SEARCH_FALLBACK = 'https://www.google.com/search?q=';
+
+        let worksheets = [];
+        let isArchiveOpen = false;
+
+        window.onload = function() {
+            loadData();
+            renderInstallGuide();
+        };
+
+        /* ===================================================
+           질문지 시기 구분 (지난 / 이번 주 / 다음 주 / 예정)
+           한 주의 시작은 일요일 기준
+           =================================================== */
+        const BADGES = {
+            past:   { cls: 'bg-slate-100 text-slate-600',     icon: 'fa-clock-rotate-left', size: 'text-[10px]', text: '지난 질문지',    short: '' },
+            this:   { cls: 'bg-emerald-100 text-emerald-700', icon: 'fa-circle',            size: 'text-[8px]',  text: '이번 주 질문지', short: '이번주' },
+            next:   { cls: 'bg-sky-100 text-sky-700',         icon: 'fa-arrow-right',       size: 'text-[10px]', text: '다음 주 질문지', short: '다음주' },
+            future: { cls: 'bg-violet-100 text-violet-700',   icon: 'fa-calendar-days',     size: 'text-[10px]', text: '예정된 질문지',  short: '예정' }
+        };
+
+        function getWeekCategory(dateStr) {
+            const parts = (dateStr || '').match(/\d+/g);
+            if (!parts || parts.length < 3) return 'past';
+
+            const d = new Date(parts[0], parts[1] - 1, parts[2]);
+            d.setHours(0, 0, 0, 0);
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            /* 돌아오는 주일 (오늘이 주일이면 오늘) */
+            const thisSunday = new Date(today);
+            thisSunday.setDate(today.getDate() + ((7 - today.getDay()) % 7));
+
+            /* 이번 주 시작 = 돌아오는 주일의 6일 전 (월요일) */
+            const thisWeekStart = new Date(thisSunday);
+            thisWeekStart.setDate(thisSunday.getDate() - 6);
+
+            /* 그 다음 주일 */
+            const nextSunday = new Date(thisSunday);
+            nextSunday.setDate(thisSunday.getDate() + 7);
+
+            if (d < thisWeekStart) return 'past';
+            if (d <= thisSunday) return 'this';
+            if (d <= nextSunday) return 'next';
+            return 'future';
+        }
+
+        /* ===================================================
+           성경 본문 링크 만들기
+           =================================================== */
+        const BIBLE_BOOKS = {
+            /* 구약 */
+            '창세기':'GEN', '창':'GEN',
+            '출애굽기':'EXO', '출':'EXO',
+            '레위기':'LEV', '레':'LEV',
+            '민수기':'NUM', '민':'NUM',
+            '신명기':'DEU', '신':'DEU',
+            '여호수아':'JOS', '수':'JOS',
+            '사사기':'JDG', '삿':'JDG',
+            '룻기':'RUT', '룻':'RUT',
+            '사무엘상':'1SA', '삼상':'1SA',
+            '사무엘하':'2SA', '삼하':'2SA',
+            '열왕기상':'1KI', '왕상':'1KI',
+            '열왕기하':'2KI', '왕하':'2KI',
+            '역대상':'1CH', '대상':'1CH',
+            '역대하':'2CH', '대하':'2CH',
+            '에스라':'EZR', '스':'EZR',
+            '느헤미야':'NEH', '느':'NEH',
+            '에스더':'EST', '에':'EST',
+            '욥기':'JOB', '욥':'JOB',
+            '시편':'PSA', '시':'PSA',
+            '잠언':'PRO', '잠':'PRO',
+            '전도서':'ECC', '전':'ECC',
+            '아가서':'SNG', '아가':'SNG', '아':'SNG',
+            '이사야':'ISA', '사':'ISA',
+            '예레미야애가':'LAM', '애':'LAM',
+            '예레미야':'JER', '렘':'JER',
+            '에스겔':'EZK', '겔':'EZK',
+            '다니엘':'DAN', '단':'DAN',
+            '호세아':'HOS', '호':'HOS',
+            '요엘':'JOL', '욜':'JOL',
+            '아모스':'AMO', '암':'AMO',
+            '오바댜':'OBA', '옵':'OBA',
+            '요나':'JON', '욘':'JON',
+            '미가':'MIC', '미':'MIC',
+            '나훔':'NAM', '나':'NAM',
+            '하박국':'HAB', '합':'HAB',
+            '스바냐':'ZEP', '습':'ZEP',
+            '학개':'HAG', '학':'HAG',
+            '스가랴':'ZEC', '슥':'ZEC',
+            '말라기':'MAL', '말':'MAL',
+            /* 신약 */
+            '마태복음':'MAT', '마':'MAT',
+            '마가복음':'MRK', '막':'MRK',
+            '누가복음':'LUK', '눅':'LUK',
+            '요한복음':'JHN', '요':'JHN',
+            '사도행전':'ACT', '행':'ACT',
+            '로마서':'ROM', '롬':'ROM',
+            '고린도전서':'1CO', '고전':'1CO',
+            '고린도후서':'2CO', '고후':'2CO',
+            '갈라디아서':'GAL', '갈':'GAL',
+            '에베소서':'EPH', '엡':'EPH',
+            '빌립보서':'PHP', '빌':'PHP',
+            '골로새서':'COL', '골':'COL',
+            '데살로니가전서':'1TH', '살전':'1TH',
+            '데살로니가후서':'2TH', '살후':'2TH',
+            '디모데전서':'1TI', '딤전':'1TI',
+            '디모데후서':'2TI', '딤후':'2TI',
+            '디도서':'TIT', '딛':'TIT',
+            '빌레몬서':'PHM', '몬':'PHM',
+            '히브리서':'HEB', '히':'HEB',
+            '야고보서':'JAS', '약':'JAS',
+            '베드로전서':'1PE', '벧전':'1PE',
+            '베드로후서':'2PE', '벧후':'2PE',
+            '요한일서':'1JN', '요일':'1JN',
+            '요한이서':'2JN', '요이':'2JN',
+            '요한삼서':'3JN', '요삼':'3JN',
+            '유다서':'JUD', '유':'JUD',
+            '요한계시록':'REV', '계':'REV'
+        };
+
+        /* 긴 이름부터 대조해야 요한복음·요한일서·요나가 섞이지 않음 */
+        const BIBLE_BOOK_KEYS = Object.keys(BIBLE_BOOKS).sort(function(a, b) {
+            return b.length - a.length;
+        });
+
+        function buildBibleUrl(passage) {
+            const raw = (passage || '').trim();
+            if (!raw) return null;
+
+            const compact = raw.replace(/\s+/g, '');
+
+            for (let i = 0; i < BIBLE_BOOK_KEYS.length; i++) {
+                const key = BIBLE_BOOK_KEYS[i];
+                if (compact.indexOf(key) === 0) {
+                    const rest = compact.slice(key.length);
+                    const found = rest.match(/\d+/);
+                    const chapter = found ? found[0] : '1';
+                    return BIBLE_BASE_URL + BIBLE_BOOKS[key] + '.' + chapter;
+                }
+            }
+
+            /* 못 알아본 표기는 검색으로 대체 */
+            return BIBLE_SEARCH_FALLBACK + encodeURIComponent(raw + ' 개역개정');
+        }
+
+        /* ===================================================
+           접속 환경 감지 (인앱브라우저 / OS / 브라우저)
+           =================================================== */
+        function detectEnv() {
+            const ua = navigator.userAgent;
+
+            /* OS 판별 (아이패드는 맥으로 위장하므로 터치 지원 여부로 보정) */
+            let os = 'pc';
+            if (/iPhone|iPad|iPod/i.test(ua)) {
+                os = 'ios';
+            } else if (/Android/i.test(ua)) {
+                os = 'android';
+            } else if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) {
+                os = 'ios';
+            }
+
+            /* 인앱브라우저 판별 */
+            let inApp = null;
+            if (/KAKAOTALK/i.test(ua)) inApp = '카카오톡';
+            else if (/Instagram/i.test(ua)) inApp = '인스타그램';
+            else if (/FBAN|FBAV|FB_IAB/i.test(ua)) inApp = '페이스북';
+            else if (/NAVER\(inapp/i.test(ua)) inApp = '네이버 앱';
+            else if (/\bBAND\//i.test(ua)) inApp = '네이버 밴드';
+            else if (/DaumApps/i.test(ua)) inApp = '다음 앱';
+            else if (/\bLine\//i.test(ua)) inApp = '라인';
+            else if (os === 'android' && /;\s*wv\)/i.test(ua)) inApp = '앱';
+
+            /* 브라우저 판별 (파생 브라우저를 먼저 걸러야 함) */
+            let browser = 'etc';
+            if (os === 'ios') {
+                if (/CriOS/i.test(ua)) browser = 'iosChrome';
+                else if (/FxiOS|EdgiOS|Whale|OPT/i.test(ua)) browser = 'etc';
+                else if (/Safari/i.test(ua)) browser = 'safari';
+            } else if (os === 'android') {
+                if (/SamsungBrowser/i.test(ua)) browser = 'samsung';
+                else if (/Whale|EdgA|OPR|Firefox/i.test(ua)) browser = 'etc';
+                else if (/Chrome/i.test(ua)) browser = 'aosChrome';
+            }
+
+            return { os: os, inApp: inApp, browser: browser };
+        }
+
+        /* ===================================================
+           브라우저별 안내 문구
+           =================================================== */
+        const GUIDES = {
+            safari: {
+                icon: 'fa-brands fa-apple',
+                title: '아이폰 · Safari',
+                steps: [
+                    `화면 아래쪽 가운데의 <strong class="text-indigo-600"><i class="fa-solid fa-arrow-up-from-bracket"></i> 공유</strong> 버튼 누르기`,
+                    `목록을 아래로 내려 <strong class="text-indigo-600">'홈 화면에 추가'</strong> 선택`,
+                    `오른쪽 위 <strong class="text-indigo-600">'추가'</strong> 누르기`
+                ]
+            },
+            iosChrome: {
+                icon: 'fa-brands fa-chrome',
+                title: '아이폰 · Chrome',
+                steps: [
+                    `주소창 오른쪽의 <strong class="text-indigo-600"><i class="fa-solid fa-arrow-up-from-bracket"></i> 공유</strong> 버튼 누르기`,
+                    `<strong class="text-indigo-600">'홈 화면에 추가'</strong> 선택`,
+                    `이름 확인 후 <strong class="text-indigo-600">'추가'</strong> 누르기`
+                ]
+            },
+            aosChrome: {
+                icon: 'fa-brands fa-chrome',
+                title: '안드로이드 · Chrome',
+                steps: [
+                    `오른쪽 위 <strong class="text-indigo-600"><i class="fa-solid fa-ellipsis-vertical"></i> 더보기</strong> 누르기`,
+                    `<strong class="text-indigo-600">'홈 화면에 추가'</strong> 선택`,
+                    `다음 화면에서 <strong class="text-indigo-600">'바로가기 만들기'</strong> 선택`,
+                    `이름 확인 후 <strong class="text-indigo-600">'추가'</strong> (기기에 따라 한 번 더 '추가')`
+                ]
+            },
+            samsung: {
+                icon: 'fa-solid fa-globe',
+                title: '안드로이드 · 삼성 인터넷',
+                steps: [
+                    `오른쪽 아래 <strong class="text-indigo-600"><i class="fa-solid fa-bars"></i> 메뉴</strong> 누르기`,
+                    `<strong class="text-indigo-600">'현재 페이지 추가'</strong> 선택`,
+                    `<strong class="text-indigo-600">'홈 화면'</strong> 선택`,
+                    `이름 확인 후 <strong class="text-indigo-600">'추가'</strong> → 한 번 더 <strong class="text-indigo-600">'추가'</strong>`
+                ]
+            },
+            iosEtc: {
+                icon: 'fa-brands fa-apple',
+                title: '아이폰 · 그 외 브라우저',
+                steps: [
+                    `브라우저 메뉴에서 <strong class="text-indigo-600">공유</strong> 버튼 찾기`,
+                    `<strong class="text-indigo-600">'홈 화면에 추가'</strong> 선택`,
+                    `그런 항목이 없으면 이 주소를 <strong class="text-indigo-600">Safari</strong>로 열어서 다시 시도`
+                ]
+            },
+            aosEtc: {
+                icon: 'fa-brands fa-android',
+                title: '안드로이드 · 그 외 브라우저',
+                steps: [
+                    `브라우저 메뉴(<strong class="text-indigo-600"><i class="fa-solid fa-ellipsis-vertical"></i></strong> 또는 <strong class="text-indigo-600"><i class="fa-solid fa-bars"></i></strong>) 누르기`,
+                    `<strong class="text-indigo-600">'홈 화면에 추가'</strong> 또는 <strong class="text-indigo-600">'현재 페이지 추가'</strong> 선택`,
+                    `그런 항목이 없으면 이 주소를 <strong class="text-indigo-600">Chrome</strong>이나 <strong class="text-indigo-600">삼성 인터넷</strong>으로 열어서 다시 시도`
+                ]
+            }
+        };
+
+        /* 인앱브라우저별 탈출 경로 */
+        const INAPP_ESCAPE = {
+            '카카오톡': `오른쪽 위(기기에 따라 오른쪽 아래)의 <strong><i class="fa-solid fa-ellipsis"></i> 더보기</strong> → <strong>'다른 브라우저로 열기'</strong>`,
+            '인스타그램': `오른쪽 위 <strong><i class="fa-solid fa-ellipsis"></i></strong> → <strong>'외부 브라우저에서 열기'</strong>`,
+            '라인': `오른쪽 위 <strong><i class="fa-solid fa-ellipsis"></i></strong> → <strong>'다른 브라우저로 열기'</strong>`,
+            '페이스북': `오른쪽 위 <strong><i class="fa-solid fa-ellipsis"></i></strong> → <strong>'외부 브라우저에서 열기'</strong>`
+        };
+
+        /* ===================================================
+           안내 블록 생성
+           =================================================== */
+        function buildGuideBlock(guide) {
+            const steps = guide.steps.map(function(s) { return `<li>${s}</li>`; }).join('');
+            return `
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-2">
+                    <div class="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
+                        <i class="${guide.icon} text-sm"></i> ${guide.title}
+                    </div>
+                    <ol class="list-decimal list-inside space-y-1.5 text-slate-600 leading-relaxed">${steps}</ol>
+                </div>`;
+        }
+
+        function buildInAppBlock(appName, os) {
+            const how = INAPP_ESCAPE[appName] || `화면 구석의 <strong><i class="fa-solid fa-ellipsis"></i> 더보기</strong> 또는 <strong>공유</strong> 버튼 → <strong>'다른 브라우저로 열기'</strong> 계열 항목`;
+            const where = (appName === '앱') ? '지금 앱 안에서 열린 화면이에요.' : `지금 ${appName} 안에서 열린 화면이에요.`;
+            const fallback = (os === 'ios') ? 'Safari' : 'Chrome';
+            return `
+                <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-200 space-y-1.5">
+                    <div class="font-bold text-amber-800 flex items-center gap-1.5 text-xs">
+                        <i class="fa-solid fa-triangle-exclamation text-sm"></i> 먼저 브라우저로 나가주세요
+                    </div>
+                    <p class="text-amber-800 leading-relaxed break-keep">
+                        ${where} 이 화면에서는 홈 화면에 추가할 수 없어요.
+                    </p>
+                    <p class="text-amber-900 font-semibold leading-relaxed break-keep">${how}</p>
+                    <p class="text-amber-700 leading-relaxed break-keep">
+                        메뉴에 그런 항목이 없으면, 주소를 복사해서 ${fallback} 주소창에 붙여넣어 주세요.
+                    </p>
+                </div>`;
+        }
+
+        function buildPcBlock() {
+            return `
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-2">
+                    <div class="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
+                        <i class="fa-solid fa-desktop text-sm"></i> PC로 접속했어요
+                    </div>
+                    <p class="leading-relaxed break-keep">
+                        홈 화면에 추가하는 기능은 휴대폰에서만 쓸 수 있어요.
+                        PC에서는 즐겨찾기에 추가해두고, 휴대폰으로 이 주소를 열어서 다시 시도해주세요.
+                    </p>
+                </div>`;
+        }
+
+        /* ===================================================
+           접속 환경에 맞는 안내만 골라서 표시
+           =================================================== */
+        function renderInstallGuide() {
+            const env = detectEnv();
+            const body = document.getElementById('installGuideBody');
+            let html = '';
+
+            if (env.os === 'pc') {
+                body.innerHTML = buildPcBlock();
+                return;
+            }
+
+            if (env.inApp) {
+                html += buildInAppBlock(env.inApp, env.os);
+                html += `<p class="text-slate-500 px-1 pt-1 leading-relaxed break-keep">브라우저로 나간 다음, 아래 순서대로 하면 돼요.</p>`;
+                if (env.os === 'ios') {
+                    html += buildGuideBlock(GUIDES.safari);
+                } else {
+                    html += buildGuideBlock(GUIDES.aosChrome);
+                    html += buildGuideBlock(GUIDES.samsung);
+                }
+            } else if (env.os === 'ios') {
+                if (env.browser === 'iosChrome') html += buildGuideBlock(GUIDES.iosChrome);
+                else if (env.browser === 'safari') html += buildGuideBlock(GUIDES.safari);
+                else html += buildGuideBlock(GUIDES.iosEtc);
+            } else {
+                if (env.browser === 'samsung') html += buildGuideBlock(GUIDES.samsung);
+                else if (env.browser === 'aosChrome') html += buildGuideBlock(GUIDES.aosChrome);
+                else html += buildGuideBlock(GUIDES.aosEtc);
+            }
+
+            body.innerHTML = html;
+        }
+
+        function showAlert(message) {
+            const overlay = document.getElementById('customAlert');
+            const box = document.getElementById('customAlertBox');
+            document.getElementById('alertMessage').innerHTML = message;
+            
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeAlert() {
+            const overlay = document.getElementById('customAlert');
+            const box = document.getElementById('customAlertBox');
+            
+            overlay.classList.add('opacity-0');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+
+        /* 📱 앱 추가 가이드 팝업 제어 함수 */
+        function openInstallGuide() {
+            const overlay = document.getElementById('installGuideModal');
+            const box = document.getElementById('installGuideBox');
+            
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeInstallGuide() {
+            const overlay = document.getElementById('installGuideModal');
+            const box = document.getElementById('installGuideBox');
+            
+            overlay.classList.add('opacity-0');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+
+/* 날짜 문자열을 정렬용 숫자로 변환 */
+function parseDateValue(dateStr) {
+    const parts = (dateStr || '').match(/\d+/g);
+    if (!parts || parts.length < 3) return 0;
+    return new Date(parts[0], parts[1] - 1, parts[2]).getTime();
+}
+
+        async function loadData() {
+            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+            try {
+                const res = await fetch(url);
+                const text = await res.text();
+                const json = JSON.parse(text.substr(47).slice(0, -2));
+                const rows = json.table.rows;
+
+                const getVal = (row, col) => row.c[col] ? (row.c[col].f || row.c[col].v) : '';
+
+                let rawList = rows.map((r, i) => {
+                    return {
+                        id: i,
+                        category: 'past',
+                        date: String(getVal(r, 1)),     
+                        title: String(getVal(r, 2)),    
+                        passage: String(getVal(r, 3)),  
+                        preacher: String(getVal(r, 4)), 
+                        imgUrl: String(getVal(r, 5)),   
+                        pdfUrl: String(getVal(r, 6)),   
+                        notice: String(getVal(r, 7))    
+                    };
+                }).filter(w => w.date !== '날짜' && w.date !== '' && w.date !== 'null');
+
+                worksheets = rawList.sort(function(a, b) {
+    return parseDateValue(b.date) - parseDateValue(a.date);
+});
+
+                /* 각 질문지가 어느 시기에 속하는지 표시 */
+                worksheets.forEach(function(w) {
+                    w.category = getWeekCategory(w.date);
+                });
+
+                document.getElementById('loadingView').style.display = 'none';
+
+                if (worksheets.length > 0) {
+                    /* 이번 주 것이 있으면 그것을, 없으면 가장 최근 지난 질문지를 먼저 보여줌 */
+                    let firstItem = worksheets.find(function(w) { return w.category === 'this'; });
+                    if (!firstItem) firstItem = worksheets.find(function(w) { return w.category === 'past'; });
+                    if (!firstItem) firstItem = worksheets[0];
+
+                    document.getElementById('downloadView').className = "active-view space-y-4";
+                    renderDownloadView(firstItem);
+                    renderArchiveList(worksheets);
+                } else {
+                    document.getElementById('loadingView').innerHTML = "등록된 질문지가 없습니다.";
+                    document.getElementById('loadingView').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('loadingView').innerHTML = "데이터를 불러오지 못했습니다. 새로고침을 하거나, 목사님께 문의해주세요.";
+            }
+        }
+
+        /* 날짜 문자열에서 요일을 계산해 일요일인지 확인 */
+        function isSunday(dateStr) {
+            const parts = (dateStr || '').match(/\d+/g);
+            if (!parts || parts.length < 3) return true; // 파싱 안 되면 경고 안 띄움
+            const d = new Date(parts[0], parts[1] - 1, parts[2]);
+            return d.getDay() === 0;
+        }
+
+        function renderDownloadView(item) {
+            document.getElementById('worksheetDate').innerText = item.date;
+            document.getElementById('sermonTitle').innerText = item.title;
+
+            const sundayBox = document.getElementById('sundayWarning');
+            if (isSunday(item.date)) {
+                sundayBox.classList.add('hidden');
+            } else {
+                sundayBox.classList.remove('hidden');
+            }
+
+            /* 본문 구절: 누르면 개역개정 본문으로 연결 */
+            const passageEl = document.getElementById('sermonPassage');
+            const passageText = (item.passage || '').trim();
+            const bibleUrl = (passageText && passageText !== 'null') ? buildBibleUrl(passageText) : null;
+
+            if (bibleUrl) {
+                passageEl.innerHTML = `<i class="fa-solid fa-book-bible w-4 text-center mr-1"></i> <a href="${bibleUrl}" target="_blank" rel="noopener noreferrer" class="underline decoration-indigo-300 underline-offset-2 hover:text-indigo-800 transition-colors">${passageText}</a> <i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-50 ml-0.5"></i>`;
+            } else {
+                passageEl.innerHTML = `<i class="fa-solid fa-book-bible w-4 text-center mr-1"></i> -`;
+            }
+
+            const preacherEl = document.getElementById('sermonPreacher');
+            if(item.preacher && item.preacher !== 'null') {
+                preacherEl.style.display = 'block';
+                preacherEl.innerHTML = `<i class="fa-solid fa-user-pen w-4 text-center mr-1"></i> 설교: ${item.preacher}`;
+            } else {
+                preacherEl.style.display = 'none';
+            }
+
+            const noticeBox = document.getElementById('noticeBox');
+            const noticeText = document.getElementById('noticeText');
+            if (item.notice && item.notice.trim() !== '' && item.notice !== 'null' && item.notice !== 'undefined') {
+                noticeBox.classList.remove('hidden');
+                noticeText.innerHTML = item.notice.replace(/\n/g, '<br>');
+            } else {
+                noticeBox.classList.add('hidden');
+            }
+
+            const pdfBtn = document.getElementById('pdfBtn');
+            const pdfLink = (item.pdfUrl || '').trim();
+
+            if (pdfLink.startsWith('http')) {
+                pdfBtn.href = pdfLink;
+                pdfBtn.target = "_blank";
+                pdfBtn.onclick = null; 
+            } else {
+                pdfBtn.href = "#"; 
+                pdfBtn.removeAttribute('target');
+                pdfBtn.onclick = function(e) {
+                    e.preventDefault();
+                    showAlert("해당 질문지는 PDF 다운을 지원하지 않습니다.<br>박윤상 목사님께 문의해주세요.");
+                };
+            }
+
+            const imgBtn = document.getElementById('imgBtn');
+            const imgLink = (item.imgUrl || '').trim();
+
+            if (imgLink.startsWith('http')) {
+                imgBtn.href = imgLink;
+                imgBtn.target = "_blank";
+                imgBtn.onclick = null; 
+            } else {
+                imgBtn.href = "#"; 
+                imgBtn.removeAttribute('target');
+                imgBtn.onclick = function(e) {
+                    e.preventDefault();
+                    showAlert("해당 질문지는 이미지 다운을 지원하지 않습니다.<br>박윤상 목사님께 문의해주세요.");
+                };
+            }
+
+            const badge = document.getElementById('badge');
+            const badgeInfo = BADGES[item.category] || BADGES.past;
+            badge.className = badgeInfo.cls + " text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1";
+            badge.innerHTML = `<i class="fa-solid ${badgeInfo.icon} ${badgeInfo.size}"></i> ${badgeInfo.text}`;
+        }
+
+        function renderArchiveList(items) {
+            const listContainer = document.getElementById('archiveList');
+            listContainer.innerHTML = '';
+
+            if(items.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-10 bg-white rounded-xl border border-slate-200">
+                        <i class="fa-regular fa-face-frown text-2xl text-slate-300 mb-2"></i>
+                        <div class="text-xs text-slate-500 font-medium">검색 결과가 없습니다.</div>
+                    </div>`;
+                return;
+            }
+
+            items.forEach((item) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-xl shadow-sm border border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer flex items-center justify-between group";
+                card.onclick = () => selectArchiveItem(item.id);
+
+                let extraInfo = item.passage;
+                if (item.preacher && item.preacher !== 'null') extraInfo += ` <span class="mx-1 text-slate-300">|</span> <span class="text-slate-500">${item.preacher}</span>`;
+
+                const badgeInfo = BADGES[item.category];
+                let tagHtml = '';
+                if (badgeInfo && badgeInfo.short) {
+                    tagHtml = `<span class="text-[10px] ${badgeInfo.cls} px-1.5 py-0.5 rounded font-bold">${badgeInfo.short}</span>`;
+                }
+
+                card.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-400">${item.date}</span>
+                            ${tagHtml}
+                        </div>
+                        <div class="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">${item.title}</div>
+                        <div class="text-[11px] text-indigo-600 flex items-center mt-0.5 font-medium">
+                            ${extraInfo}
+                        </div>
+                    </div>
+                    <div class="text-slate-300 pl-2 group-hover:text-indigo-400 transition-colors">
+                        <i class="fa-solid fa-chevron-right text-sm"></i>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        function toggleSearchBar() {
+            const container = document.getElementById('searchContainer');
+            const icon = document.getElementById('searchToggleIcon');
+            const input = document.getElementById('searchInput');
+
+            if (container.classList.contains('search-closed')) {
+                container.classList.remove('search-closed');
+                container.classList.add('search-open');
+                icon.classList.replace('fa-magnifying-glass', 'fa-angle-up');
+                setTimeout(() => input.focus(), 300);
+            } else {
+                container.classList.remove('search-open');
+                container.classList.add('search-closed');
+                icon.classList.replace('fa-angle-up', 'fa-magnifying-glass');
+                clearSearch();
+            }
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            filterArchive();
+        }
+
+        function filterArchive() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = worksheets.filter(w => 
+                w.title.toLowerCase().includes(query) ||
+                w.passage.toLowerCase().includes(query) ||
+                w.preacher.toLowerCase().includes(query) ||
+                w.date.toLowerCase().includes(query)
+            );
+            renderArchiveList(filtered);
+        }
+
+        function toggleView() {
+            isArchiveOpen = !isArchiveOpen;
+            const downloadView = document.getElementById('downloadView');
+            const archiveView = document.getElementById('archiveView');
+            const navText = document.getElementById('navText');
+            const navIcon = document.getElementById('navIcon');
+
+            if (isArchiveOpen) {
+                downloadView.className = "hidden-view";
+                archiveView.className = "active-view space-y-3";
+                navText.innerText = "이번주 질문지로";
+                navIcon.className = "fa-solid fa-house";
+                const container = document.getElementById('searchContainer');
+                if(container.classList.contains('search-open')) {
+                    toggleSearchBar(); 
+                }
+            } else {
+                archiveView.className = "hidden-view";
+                downloadView.className = "active-view space-y-4";
+                navText.innerText = "지난 질문지";
+                navIcon.className = "fa-solid fa-clock-rotate-left";
+            }
+        }
+
+        function selectArchiveItem(id) {
+            const selected = worksheets.find(w => w.id === id);
+            if (selected) {
+                renderDownloadView(selected);
+                toggleView(); 
+            }
+        }
+    </script>
+</body>
+</html>
