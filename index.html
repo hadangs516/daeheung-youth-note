@@ -875,5 +875,48 @@ function parseDateValue(dateStr) {
         }
     </script>
 <script data-goatcounter="https://daeheungyouth.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <script>
+(function () {
+    var STATS_URL = 'https://script.google.com/macros/s/AKfycbz-IHeTY5TnRaIQ-dzdaZ6sKR_Y3xRZ4jG6kZU0o7lL_Ypf3Lby9Cj1hB4RyKpB6b_a/exec';
+
+    function kstToday() {
+        return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+    }
+
+    function sendStat(type) {
+        try {
+            fetch(STATS_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                keepalive: true,
+                body: JSON.stringify({ type: type })
+            });
+        } catch (e) {}
+    }
+
+    // 접속자: 브라우저당 하루 1회
+    try {
+        var today = kstToday();
+        if (localStorage.getItem('statsVisitDate') !== today) {
+            localStorage.setItem('statsVisitDate', today);
+            sendStat('visit');
+        }
+    } catch (e) {
+        sendStat('visit');
+    }
+
+    // 다운로드: 링크가 유효할 때만 집계
+    function bindDownload(id, type) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('click', function () {
+            var href = el.getAttribute('href') || '';
+            if (href.indexOf('http') === 0) sendStat(type);
+        });
+    }
+    bindDownload('pdfBtn', 'pdf');
+    bindDownload('imgBtn', 'img');
+})();
+    </script>
 </body>
 </html>
